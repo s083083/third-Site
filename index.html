@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佳句與時鐘日曆</title>
+    <style>
+        /* 整體網頁設定：背景深灰色 */
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #2b2b2b;
+            font-family: "Microsoft JhengHei", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* 左右雙欄主容器 */
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            height: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* 左邊區塊：中文佳句（深棕色） */
+        .left-panel {
+            flex: 1;
+            background-color: #3e2723;
+            color: #d7ccc8;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.5s ease;
+        }
+
+        .quote-text {
+            font-size: 24px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        /* 右邊區塊：日曆與時鐘（淺黃色） */
+        .right-panel {
+            width: 450px;
+            background-color: #fff9c4;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* 傳統時鐘外觀 */
+        .clock {
+            width: 180px;
+            height: 180px;
+            border: 6px solid #5d4037;
+            border-radius: 50%;
+            position: relative;
+            /* 使用真實圖片 cloud.jpg，並透過 linear-gradient 疊加一層半透明白色達到「淡化」效果 */
+            background: linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)), url('cloud.jpg');
+            background-size: cover;
+            background-position: center;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        /* 時鐘整點數字基底 */
+        .clock-number {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+        /* 旋轉整點數字到正確位置 */
+        .num12 { transform: rotate(0deg); }
+        .num3  { transform: rotate(90deg); }
+        .num6  { transform: rotate(180deg); }
+        .num9  { transform: rotate(270deg); }
+
+        /* 修正內置數字的轉向，讓數字本身是正的 */
+        .clock-number span {
+            display: inline-block;
+        }
+        .num3 span  { transform: rotate(-90deg); }
+        .num6 span  { transform: rotate(-180deg); }
+        .num9 span  { transform: rotate(-270deg); }
+
+        /* 時鐘指針中心點 */
+        .clock::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        /* 指針通用設定 */
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            background: #333;
+            border-radius: 4px;
+            transform: translateX(-50%) rotate(0deg);
+        }
+
+        .hour-hand { width: 6px; height: 45px; background: #333; }
+        .min-hand  { width: 4px; height: 65px; background: #555; }
+        .sec-hand  { width: 2px; height: 75px; background: #e53935; }
+
+        /* 日曆外觀 */
+        .calendar {
+            width: 180px;
+            height: 180px;
+            border: 4px solid #5d4037;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            /* 使用真實圖片 beauty.jpg，並透過 linear-gradient 疊加一層半透明白色達到「淡化」效果 */
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), url('beauty.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .cal-header {
+            background-color: rgba(211, 47, 47, 0.85);
+            color: white;
+            text-align: center;
+            padding: 8px 0;
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .cal-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cal-date {
+            font-size: 50px;
+            font-weight: bold;
+            color: #222;
+            line-height: 1;
+        }
+
+        .cal-day {
+            font-size: 16px;
+            color: #555;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="left-panel">
+            <div class="quote-text" id="quoteDisplay">正在載入佳句...</div>
+        </div>
+
+        <div class="right-panel">
+            <div class="clock">
+                <div class="clock-number num12"><span>12</span></div>
+                <div class="clock-number num3"><span>3</span></div>
+                <div class="clock-number num6"><span>6</span></div>
+                <div class="clock-number num9"><span>9</span></div>
+                <div class="hand hour-hand" id="hourHand"></div>
+                <div class="hand min-hand" id="minHand"></div>
+                <div class="hand sec-hand" id="secHand"></div>
+            </div>
+
+            <div class="calendar">
+                <div class="cal-header" id="calMonth">JAN</div>
+                <div class="cal-body">
+                    <div class="cal-date" id="calDate">01</div>
+                    <div class="cal-day" id="calDay">星期一</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === 1. 精選 100 句中文佳句資料庫 ===
+        const quotes = [
+            "生命不是要活得像別人，而是要活得像自己。", "當你停下腳步時，別忘了別人還在奔跑。", "每天都是一個新的開始，深呼吸，重新出發。", "成功的秘訣，在於對目標的堅定不移。", "不要等待機會，而要創造機會。",
+            "每一步腳踏實地，都能讓你更接近夢想。", "心有多大，舞台就有多大。", "失敗並不可怕，可怕的是失去了站起來的勇氣。", "用微笑面對生活，生活就會對你微笑。", "最暗的夜，才能看見最閃爍的星星。",
+            "人生重要的不是所站的位置，而是所朝的方向。", "幸福不是擁有得多，而是計較得少。", "昨天的淚水，會變成今天的堅強。", "不要因為走得太遠，而忘記了為什麼出發。", "既然選擇了遠方，便只顧風雨兼程。",
+            "只有不快的斧，沒有劈開不柴。", "每一次努力的背後，必有加倍的賞賜。", "命運掌握在自己手中，而不是別人的嘴裡。", "環境不會改變，解決之道在於改變自己。", "夢想不拋棄苦心追求的人。",
+            "沒有志向的人，就像沒有舵的船。", "堅持不懈是成功的左膀右臂。", "不為模糊不清的未來擔憂，只為清清楚楚的現在努力。", "行動是治癒恐懼的良藥。", "世上沒有絕望的處境，只有對處境絕望的人。",
+            "當你撐不住的時候，告訴自己：再堅持一下。", "知足常樂，便是人間好時節。", "你可以倒下，但絕對不能跪下。", "千里之行，始於足下。", "不經一番寒徹骨，怎得梅花撲鼻香。",
+            "機會總是留給準備好的人。", "將來的你，一定會感謝現在拼命的自己。", "活在當下，把每一個今天都活得精彩。", "人生最大的破產是絕望，最大的資產是希望。", "太陽背後，永遠是晴空。",
+            "複雜的事情簡單做，簡單的事情重複做。", "只有勇於攀登高峰的人，才能看到最美的風景。", "生活可以平凡，但生命不能平庸。", "每一個不曾起舞的日子，都是對生命的辜負。", "寧願辛苦一陣子，不要辛苦一輩子。",
+            "信心是命運的主宰。", "做自己的英雄，不向命運低頭。", "勇氣不是沒有恐懼，而是看破恐懼。", "學習的痛苦是暫時的，未學到的痛苦是終身的。", "把熱情當作燃料，去點燃你的夢想。",
+            "善良是世界上最美麗的語言。", "懂得感恩的人，世界總是充滿陽光。", "沒有什麼比熱情更能感染人心。", "山不轉路轉，路不轉心轉。", "即使走得慢，也絕不後退。",
+            "今天付出的努力，是明天的底氣。", "你的努力，時間都看得見。", "用汗水澆灌的果實，最為甜美。", "超越自己，才是真正的卓越。", "悲觀者在機會中看到困難，樂觀者在困難中看到機會。",
+            "在淚水中成長，在歷練中堅強。", "時間是公平的，看你如何雕刻它。", "只要心中有光，就不怕路途遙遠。", "最完美的產品叫『過去』，最需要的努力叫『未來』。", "夢想這條路踏上了，跪著也要走完。",
+            "與其抱怨黑暗，不如點亮蠟燭。", "理智無法支配情緒，相反地，行動才能改變情緒。", "永不言敗，是強者的通行證。", "把握現在，就是對未來最好的交代。", "生活本就是一場修行。",
+            "一分耕耘，一分收穫。", "只有經歷過地獄般的磨練，才能煉出創造天堂的力量。", "路是自己走出來的，歷史是自己寫出來的。", "擁有夢想的人，眼睛裡有光。", "不要讓昨天的遺憾，佔用今天的時間。",
+            "你可以普通，但要拒絕平庸。", "真正的強者，不是沒有眼淚，而是含著眼淚奔跑。", "每天進步一點點，那就是卓越的開始。", "即使翅膀折斷，心也要飛翔。", "天生我材必有用。",
+            "少一些抱怨，多一些行動。", "把不忙的時間留給充實自己。", "做對的事情，比把事情做對更重要。", "自律才能帶來真正的自由。", "世上無難事，只怕有心人。",
+            "每一次的打擊，都是最好的堅強劑。", "用實力說話，用結果證明。", "保持熱愛，奔赴下一場山海。", "人生的抹布，是用來抹去淚水的。", "越努力，越幸運。",
+            "不要拿別人的標準，來衡量自己的人生。", "相信自己，你遠比想像中更強大。", "逆風的方向，更適合飛翔。", "聚沙成塔，集腋成裘。", "把阻礙當作前進的墊腳石。",
+            "心態決定一切，格局決定結局。", "凡事謝恩，心中常存喜樂。", "不要被困難嚇倒，它只是紙老虎。", "生命只有一次，必須活得痛快。", "追逐影子的人，永遠看不到太陽。",
+            "微笑是面對世界最好的武器。", "只有辛勤耕耘，才有豐碩收穫。", "青春是用來奮鬥的，不是用來揮霍的。", "心之所向，素履以往。", "今天又是充滿希望的一天！"
+        ];
+
+        // 更換佳句的函式
+        function changeQuote() {
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            document.getElementById('quoteDisplay').innerText = quotes[randomIndex];
+        }
+
+        // 初始化佳句並設定每60秒(1分鐘)更換一次
+        changeQuote();
+        setInterval(changeQuote, 60000);
+
+
+        // === 2. 時鐘與日曆邏輯 ===
+        function updateClockAndCalendar() {
+            const now = new Date();
+
+            // --- 時鐘部分 ---
+            const seconds = now.getSeconds();
+            const minutes = now.getMinutes();
+            const hours = now.getHours();
+
+            // 計算指針旋轉角度
+            const secDegrees = (seconds / 60) * 360;
+            const minDegrees = ((minutes / 60) * 360) + ((seconds / 60) * 6);
+            const hourDegrees = ((hours % 12) / 12) * 360 + ((minutes / 60) * 30);
+
+            document.getElementById('secHand').style.transform = `translateX(-50%) rotate(${secDegrees}deg)`;
+            document.getElementById('minHand').style.transform = `translateX(-50%) rotate(${minDegrees}deg)`;
+            document.getElementById('hourHand').style.transform = `translateX(-50%) rotate(${hourDegrees}deg)`;
+
+            // --- 日曆部分 ---
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            const days = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+
+            const monthStr = months[now.getMonth()];
+            const dateStr = String(now.getDate()).padStart(2, '0');
+            const dayStr = days[now.getDay()];
+
+            document.getElementById('calMonth').innerText = monthStr;
+            document.getElementById('calDate').innerText = dateStr;
+            document.getElementById('calDay').innerText = dayStr;
+        }
+
+        // 初始化時鐘日曆並設定每秒動態更新
+        updateClockAndCalendar();
+        setInterval(updateClockAndCalendar, 1000);
+    </script>
+</body>
+</html>
